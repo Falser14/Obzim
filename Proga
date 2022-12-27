@@ -1,0 +1,526 @@
+double D0;
+double S0;
+double di;
+double Sdn;
+double k;
+double md;
+double G;
+double e1;
+double σv, σ2, y, σkr; // Переменные для материала
+double a, a1, a2, a3, b1, b2, b3, b4; //Переменные для частей формул
+double A, B, Ky, Kn, m1, m2, smax, smin,ssr; //Переменные для подстановки в формулы
+
+//Ввод начальных данных
+Console.WriteLine("Исходные данные");
+Console.Write("Введите значение диаметра дульца заготовки:" + " ");
+D0 = Convert.ToDouble(Console.ReadLine());
+ 
+Console.Write("Введите значение толщины заготовки:" + " ");
+S0 = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите значение диаметра полуфабриката после обжима:" + " ");
+di = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите значение толщины дна:" + " ");
+Sdn = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите допустимое отклонение на толщину стенки, заданное чертежом: " + " ");
+m2 = Convert.ToDouble(Console.ReadLine());
+//Конец ввода
+
+//Расчет коеф. обжима
+md = di / D0; 
+md = Math.Round(md, 2);   
+Console.WriteLine("Коэффициент обжима равен: " + md);
+
+//Расчет степени деформации
+a = 1 / md;
+e1 = Math.Log(a);
+e1 = Math.Round(e1, 2);
+Console.WriteLine("Степень деформации будет равена:  " + e1);
+
+// Расчет кол-ва операций обжима
+a1 = S0 / D0;
+
+
+// Ввод углов
+Console.Write("Введите значение угла конустности a в радианах: " + " ");
+A = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите значение угла конустности б в радианах: " + " ");
+B = Convert.ToDouble(Console.ReadLine());
+
+// Ввод параметров материала
+Console.Write("Введите значение σв: " + " ");
+σv = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите значение σkr: " + " ");
+σkr = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите значение относительного равномерное сужение: " + " ");
+y = Convert.ToDouble(Console.ReadLine());
+
+
+Double hg, h2, dvm2, A2;
+Console.Write("Введите значение высоты ската готовой детали: " + " ");
+hg = Convert.ToDouble(Console.ReadLine());
+Console.Write("Введите угол ската в радианах: " + " ");
+A2 = Convert.ToDouble(Console.ReadLine());
+
+
+// 1) Формулы для проверки на возможность 1 обжима из устойчивости заготовки с исключением образования продольных складок на кромке в начальный период деформирования
+smax = S0 + m2;
+smin = S0 - m2;
+ssr = (smax + smin) / 2;
+h2 = (smax - smin) / ssr;
+
+Ky = 2.5;
+
+if (h2 > 0.3 & h2 < 0.45)
+{
+    Ky = 3;
+}
+if (h2 > 0.1 & h2 <= 0.3)
+{
+    Ky = 2.5;
+}
+if (h2 < 0.1)
+{
+    Ky = 2;
+}
+
+Kn = 1;
+
+if (h2 > 0.1 & h2 <= 0.2)
+{
+    Kn = 1.02;
+}
+if (h2 > 0.2 & h2 <= 0.3)
+{
+    Kn = 1.05;
+}
+if (h2 > 0.3 & h2 < 0.4)
+{
+    Kn = 1.25;
+}
+if (h2 >= 0.4 & h2 < 0.6)
+{
+    Kn = 1.4;
+}
+
+a2 = (Math.Tan((A - B) / 2)) / (6 * Math.Cos(A - B)) + ( 0.125 * Math.Tan(A - B));
+a3 = ((Ky * Kn) / (1- 0.5 * h2)) * Math.Pow(a2, 2);
+a3 = Math.Round(a3, 4);
+
+// 2)	Оценка количества операций из условий продольной устойчивости в период контактной деформации
+m1 = di / D0;
+
+// Вычисление k
+b1 = Math.Pow(1 - y, 2);
+b2 = Math.Pow(S0 / D0, 0.5);
+k = 1.5 * (σv / b1) * (1.35 - 2 * y) * b2 * Math.Sin(A);
+
+b3 = Math.Pow(1 - 2 * y, 2) + (1.6 * σkr * Math.Cos(A) - k * Math.Pow(1 - y, 2)) / (σv * (1 + 0.12 * (1 / Math.Tan(A)) * (3 - 2 * Math.Cos(A))));
+b4 = 2 * (1 - y) - Math.Pow(b3, 0.5);
+b4 = Math.Round(b4, 2);
+G = 1;
+a1 = Math.Round(a1, 4);
+m1 = Math.Round(m1, 4);
+double G3;
+G3 = 1;
+//Проверка на 1 операцию обжима
+if (a1 >= a3 & m1 >= b4)
+{
+    Console.WriteLine("Условия " + a1 + ">" + a3 + " и " + m1 + ">" + b4 + " Выполняются, следовательно обжим возможен за 1 операцию");
+    
+}
+
+else
+{
+    Console.WriteLine("Условия " + a1 + ">" + a3 + " и " + m1 + ">" + b4 + " Не выполняются, следовательно обжим невозможен за 1 операцию");
+    G = 1; // Счетчик обжимов, по умолчанию 1
+    while (m1 < b4)
+    {
+        // Обновление переменной m1
+        m1 = Math.Pow(m1, 0.5);
+        m1 = Math.Round(m1, 3);
+
+        // Обновление переменной к
+        A = 0.26; // Значение угла конусности на первой операции обжима    
+       
+
+        // Перерасчет б4
+        b3 = Math.Pow(1 - 2 * y, 2) + (1.6 * σkr * Math.Cos(A) - k * Math.Pow(1 - y, 2)) / (σv * (1 + 0.12 * (1 / Math.Tan(A)) * (3 - 2 * Math.Cos(A))));
+        b4 = 2 * (1 - y) - Math.Pow(b3, 0.5);
+        b4 = Math.Round(b4, 2);
+        b4 = 1.1 * b4;
+        G = G + 1;
+    }
+    while (a1 < a3)
+    {
+        double S1, d1;
+        Console.Write("Введите угол ската после первой операции в радианах: " + " ");
+        A2 = Convert.ToDouble(Console.ReadLine());
+        m1 = 1 - (hg / D0) * Math.Tan(A2);
+        S1 = S0 / Math.Pow(m1, 0.5);
+        d1 = m1 * D0;
+        a1 = S1 / d1;
+        a2 = (Math.Tan((A2 - B) / 2)) / (6 * Math.Cos(A2 - B)) + (0.125 * Math.Tan(A2 - B));
+        a3 = ((Ky * Kn) / (1 - 0.5 * h2)) * Math.Pow(a2, 2);
+        a3 = Math.Round(a3, 4);
+        G3 = G3 + 1;
+    }
+    if (G3 > G)
+    {
+        G = G3;
+    }
+    Console.WriteLine("Количество обжимов равно " + G);
+    
+    Console.WriteLine(m1);
+}
+Double b, c, Tdn, G1;
+G1 = G;
+// Расчет диаметра дульца после операций
+
+static double Sum(double D0, double b)
+{
+
+    if (D0 <= 3)
+    {
+        b = -0.006;
+    }
+    if (3 < D0 && D0 <= 6)
+    {
+        b = -0.008;
+    }
+    if (6 < D0 && D0 <= 10)
+    {
+        b = -0.009;
+    }
+    if (10 < D0 && D0 <= 18)
+    {
+        b = -0.011;
+    }
+    if (18 < D0 && D0 <= 30)
+    {
+        b = -0.013;
+    }
+    if (30 < D0 && D0 <= 50)
+    {
+        b = -0.016;
+    }
+    if (50 < D0 && D0 <= 80)
+    {
+        b = -0.019;
+    }
+    if (80 < D0 && D0 <= 120)
+    {
+        b = -0.022;
+    }
+    if (120 < D0 && D0 <= 180)
+    {
+        b = -0.025;
+    }
+    if (180 < D0 && D0 <= 250)
+    {
+        b = -0.029;
+    }
+    if (250 < D0 && D0 <= 315)
+    {
+        b = -0.032;
+    }
+    if (315 < D0 && D0 <= 400)
+    {
+        b = -0.036;
+    }
+    if (400 < D0 && D0 <= 500)
+    {
+        b = -0.04;
+    }
+    double result = b;
+    return result;
+} //Допуски по 6 квалитету
+b = 0;
+
+c = Sum(D0, b);
+
+
+Double Td = 0;
+double d1v = m1 * D0;
+
+var Ob = new List<double>();
+
+while (G > 1)
+{
+    Tdn = c;
+    double del1 = 0.001 * d1v;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (d1v - Pizn1 - del1);
+    dvm1 = Math.Round(dvm1, 2);
+    Ob.Add(dvm1);
+    c = Sum(dvm1, b);
+    G = G - 1;
+    d1v = m1 * dvm1;
+}
+while (G > 0)
+{
+    d1v = di;
+    c = Sum(d1v, b);
+    Tdn = c;
+    double del1 = 0.001 * d1v;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (d1v - Pizn1 - del1);
+    dvm1 = Math.Round(dvm1, 2);
+    Ob.Add(dvm1);
+    G = G - 1;
+}
+
+Console.WriteLine("Диаметры дульца после операций будут равны ");
+foreach (double i in Ob)
+{
+    Console.WriteLine(i);
+}
+
+
+// Расчет высоты ската
+G = G1;
+
+
+
+var Ho = new List<double>();
+dvm2 = Ob[0];
+
+while (G > 1)
+{
+
+    double h = ((D0 - dvm2) / 2) * (Math.Cos(A2) / Math.Sin(A2));
+    h = Math.Round(h, 2);
+    Ho.Add(h);
+    
+    G = G - 1;
+    dvm2 = h ;
+}
+while (G > 0)
+{
+    double h = hg;
+    Ho.Add(h);
+    G = G - 1;
+    
+}
+
+Console.WriteLine("Высоты скатов на операциях будут равны ");
+
+foreach ( double i in Ho)
+{
+    Console.WriteLine(i);
+}
+
+// Расчет диаметра заготовки в нижнем сечении
+
+Double dn1;
+Console.Write("Введите значение нижнего диамeтра исходной заготовки на каждой операции обжима : " + " ");
+dn1 = Convert.ToDouble(Console.ReadLine());
+
+Double dn3, dn4;
+Console.Write("Введите номинальный диаметр заготовки в среднем сечении на первой операции обжима определенный геометрически с помощью программы КОМПАС-3D : " + " ");
+dn3 = Convert.ToDouble(Console.ReadLine());
+
+Console.Write("Введите диаметр в среднем сечении готовой детали : " + " ");
+dn4 = Convert.ToDouble(Console.ReadLine());
+
+double del3 = 0.001 * D0;
+
+if (dn1 <= 3)
+{
+    Tdn = -0.006;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (3 < dn1 && dn1 <= 6)
+{
+    Tdn = -0.008;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (6 < dn1 && dn1 <= 10)
+{
+    Tdn = -0.009;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+
+}
+if (10 < dn1 && dn1 <= 18)
+{
+    Tdn = -0.011;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (18 < dn1 && dn1 <= 30)
+{
+    Tdn = -0.013;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (30 < dn1 && dn1 <= 50)
+{
+    Tdn = -0.016;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (50 < dn1 && dn1 <= 80)
+{
+    Tdn = -0.019;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (80 < dn1 && dn1 <= 120)
+{
+    Tdn = -0.022;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (120 < dn1 && dn1 <= 180)
+{
+    Tdn = -0.025;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (180 < dn1 && dn1 <= 250)
+{
+    Tdn = -0.029;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (250 < dn1 && dn1 <= 315)
+{
+    Tdn = -0.032;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+if (315 < dn1 && dn1 <= 400)
+{
+    Tdn = -0.036;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен : " + dvm1);
+}
+if (400 < dn1 && dn1 <= 500)
+{
+    Tdn = -0.04;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn1 - Pizn1 - del3);
+    Console.WriteLine("Диаметр в нижнем сечении будет равен: " + dvm1);
+}
+
+// Расчет диаметра заготовки в среднем сечении и радиуса скругления
+
+var Ob1 = new List<double>();
+var Ob2 = new List<double>();
+c = Sum(dn3, b);
+G = G1;
+while (G > 1)
+{
+    Tdn = c;
+    double del1 = 0.001 * d1v;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn3 - Pizn1 - del1);
+    double R1 = dvm1 / 2;
+    R1 = Math.Round(R1, 2);
+    dvm1 = Math.Round(dvm1, 2);
+    Ob2.Add(R1);
+    Ob1.Add(dvm1);
+    c = Sum(dvm1, b);
+    G = G - 1;
+    dn3 = m1 * dvm1;
+}
+while (G > 0)
+{
+    d1v = dn4;
+    c = Sum(d1v, b);
+    Tdn = c;
+    double del1 = 0.001 * d1v;
+    double Pizn1 = 0.8 * (Td - Tdn);
+    double dvm1 = (dn4 - Pizn1 - del1);
+    double R1 = dvm1 / 2;
+    R1 = Math.Round(R1, 2);
+    dvm1 = Math.Round(dvm1, 2);
+    Ob2.Add(R1);
+    Ob1.Add(dvm1);
+    G = G - 1;
+
+}
+
+Console.WriteLine("Диаметры в среднем сечении после операций будут равны ");
+foreach (double dvm1 in Ob1)
+{
+    Console.WriteLine(dvm1);
+}
+
+Console.WriteLine("Радиусы скруглений после операций будут равны ");
+
+foreach (double R1 in Ob2)
+{
+    Console.WriteLine(R1);
+}
+
+
+
+
+// Расчет диамтера обжимного стержня
+G = G1;
+var H2 = new List<double>();
+int q = 0;
+
+while (G > 0)
+{
+    double dob1 = Ob[q] - 2 * S0 + 0.02;
+    dob1 = Math.Round(dob1, 2);
+    H2.Add(dob1);
+    q = q + 1;
+    G = G - 1;
+}
+
+Console.WriteLine("Диаметры обжимного стержня на операциях равны ");
+
+foreach (double dob1 in H2)
+{
+    Console.WriteLine(dob1);
+}
+
+// Расчет технологических сил на операциях
+G = G1;
+Double Sigmat, p3, p4;
+Sigmat = (σv * (1 - 2 * y)) / Math.Pow((1 - y), 2);
+Console.WriteLine(Sigmat);
+
+var H3 = new List<double>();
+var O1 = new List<double>();
+
+O1.Add(D0);
+
+O1.AddRange(Ob);
+q = 0;
+Console.WriteLine(Ob[q]);
+Console.WriteLine(O1[q]);
+while (G > 0)
+{
+    p3 = (1 - m1) * (1 + 0.12 * (Math.Cos(A) / Math.Sin(A)));
+    p4 = Math.Pow(m1, 0.5);
+    double P11 = ((3.14 * O1[q] * y) / 2) * (Sigmat + 1.57 * (1 - m1)) * (p3 + Math.Pow(S0 / Ob[q], 0.5) * Math.Sin(A)) * (1 + 1 / p4) * (3 - 2 * Math.Cos(A)) * 1.15;
+    H3.Add(P11);
+    q = q + 1;
+    G = G - 1;
+    A = A2;
+}
+
+Console.WriteLine("Технологические силы на операциях равны ");
+
+foreach (double P11 in H3)
+{
+    Console.WriteLine(P11);
+}
